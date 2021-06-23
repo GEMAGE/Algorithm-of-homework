@@ -1,0 +1,74 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define MAXSIZE 10
+#define TRUE 1
+#define FALSE 0
+#define INF 100
+typedef int WeightType;
+
+typedef struct {
+	int Nv;
+	int Ne;
+	WeightType G[MAXSIZE][MAXSIZE];
+}GNode, * MGraph;
+
+MGraph buildGraph(FILE* fp) {
+	int v1, v2, w;
+	MGraph graph = (MGraph)malloc(sizeof(GNode));
+	fscanf_s(fp, "%d %d", &graph->Nv, &graph->Ne);
+	memset(graph->G, 0, sizeof(graph->G));
+	for (int i = 0; i < graph->Ne; ++i) {
+		fscanf_s(fp, "%d %d %d", &v1, &v2, &w);
+		graph->G[v1][v2] = w;
+	}
+	return graph;
+}
+
+int distance[MAXSIZE][MAXSIZE];
+int suspend[MAXSIZE][MAXSIZE];
+
+void Floyd(MGraph graph) {
+	//初始化最短路径矩阵
+	for (int i = 1; i <= graph->Nv; ++i) {
+		for (int j = 1; j <= graph->Nv; ++j) {
+			if (i == j)distance[i][j] = 0;
+			else if (graph->G[i][j] == 0)distance[i][j] = INF;
+			else distance[i][j] = graph->G[i][j];
+		}
+	}
+	//初始化
+	for (int i = 1; i <= graph->Nv; ++i) {
+		for (int j = 1; j <= graph->Nv; ++j) {
+			suspend[j][i] = i;
+		}
+	}
+	for (int k = 1; k <= graph->Nv; ++k) {
+		for (int i = 1; i <= graph->Nv; ++i) {
+			for (int j = 1; j <= graph->Nv; ++j) {
+				if (i == k || j == k)continue;
+				if (distance[i][j] > distance[i][k] + distance[k][j]) {
+					distance[i][j] = distance[i][k] + distance[k][j];
+					suspend[i][j] = k;
+				}
+			}
+		}
+	}
+	return;
+}
+
+int main() {
+	FILE* fp, * fo;
+	fp = fopen("input.txt", "r");
+	//fo = fopen("output.txt", "w");
+	MGraph graph = buildGraph(fp);
+	Floyd(graph);
+	for (int i = 1; i < graph->Nv + 1; ++i) {
+		for (int j = 1; j < graph->Nv + 1; ++j) {
+			printf("%d ", distance[i][j]);
+		}
+		printf("\n");
+	}
+	return 0;
+}
