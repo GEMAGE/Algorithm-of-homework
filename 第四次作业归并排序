@@ -1,0 +1,54 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#define MAXSIZE 1000
+
+void Merge(int array[], int left, int mid, int right) {
+	if (left >= right)return;
+	int newArray[MAXSIZE] = { 0 };
+	int frontLeft = left;
+	int frontRight = mid;
+	int backLeft = mid + 1;
+	int backRight = right;
+	int start = left;
+	while (frontLeft <= frontRight && backLeft <= backRight) {
+		if (array[frontLeft] < array[backLeft]) {
+			newArray[start] = array[frontLeft++];
+		}
+		else {
+			newArray[start] = array[backLeft++];
+		}
+		start++;
+	}
+	while (frontLeft <= frontRight) {
+		newArray[start++] = array[frontLeft++];
+	}
+	while (backLeft <= backRight) {
+		newArray[start++] = array[backLeft++];
+	}
+	for (int i = left; i <= right; ++i)array[i] = newArray[i];
+}
+
+void MergeSort(int array[], int left, int right) {
+	if (left >= right)return;
+	int mid = (left + right) / 2;
+	MergeSort(array, left, mid);
+	MergeSort(array, mid + 1, right);
+	Merge(array, left, mid, right);
+	return;
+}
+
+int main() {
+	FILE* fp, * fo;
+	fp = fopen("input.txt", "r");
+	fo = fopen("output.txt", "w");
+	int total;
+	fscanf_s(fp, "%d", &total);
+	int array[MAXSIZE] = { 0 };
+	for (int i = 0; i < total; ++i)
+		fscanf_s(fp, "%d", &array[i]);
+	MergeSort(array, 0, total - 1);
+	for (int i = 0; i < total; ++i)
+		fprintf(fo, "%d ", array[i]);
+	return 0;
+}
