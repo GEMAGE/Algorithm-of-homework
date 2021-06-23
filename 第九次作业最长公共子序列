@@ -1,0 +1,101 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<malloc.h>
+#define MAX 100
+#define x 0
+#define y 1
+#define both 2
+
+void LCS(char X[], char Y[], int m, int n, FILE* fo) {
+	//输入：两个序列X和Y，m为X序列的长度，n为Y序列的长度
+	int** C = (int**)malloc(sizeof(int*) * (m+1)); //C[i][j]：长度为i的X序列和长度为j的Y序列的最长公共子序列的长度
+	int** B = (int**)malloc(sizeof(int*) * (m+1)); //B[i][j]记录在(i,j)位置时删除的是x、y或xy
+	for (int i = 0; i <= m; ++i) {
+		C[i] = (int*)malloc(sizeof(int) * (n + 1));
+		B[i] = (int*)malloc(sizeof(int) * (n + 1));
+	}
+	//初始化
+	for (int i = 0; i <= n; ++i) {
+		C[0][i] = 0;
+	}
+	for (int i = 0; i <= m; ++i) {
+		C[i][0] = 0;
+	}
+	//核心算法
+	for (int i = 1; i <= m; ++i) {
+		for (int j = 1; j <= n; ++j) {
+			if (X[i] == Y[j]) {
+				C[i][j] = C[i - 1][j - 1] + 1;
+				B[i][j] = both;
+			}
+			else {
+				if (C[i - 1][j] > C[i][j - 1]) {
+					C[i][j] = C[i - 1][j];
+					B[i][j] = x;
+				}
+				else {
+					C[i][j] = C[i][j - 1];
+					B[i][j] = y;
+				}
+			}
+		}
+	}
+
+	int len = C[m][n]; //LCS的长度
+	char* delete = (char*)malloc(sizeof(char) * C[m][n]);
+	int i = m, j = n;
+	while (1) {
+		if (len == 0)break;
+		if (B[i][j] == both) {
+			delete[len - 1] = X[i];
+			i--;
+			j--;
+			len--;
+		}
+		else if (B[i][j] == x) {
+			i--;
+		}
+		else {
+			j--;
+		}
+	}
+
+	fprintf(fo, "LCS的长度为：%d\nLCS：<", C[m][n]);
+	for (i = 0; i < C[m][n]; ++i) {
+		fprintf(fo, "%c", delete[i]);
+	}
+	fprintf(fo, ">\n");
+
+	for (i = 0; i < n; ++i) {
+		free(C[i]);
+		free(B[i]);
+	}
+	free(C);
+	free(B);
+	return;
+}
+int main(){
+	FILE* fp, * fo;
+	fp = fopen("input.txt", "r");
+	fo = fopen("output.txt", "w");
+	int m;
+	int n;
+	char X[MAX];
+	char Y[MAX];
+	fscanf(fp, "%d %d", &m, &n);
+	for (int i = 1; i <= m; ++i) {
+		char c = fgetc(fp);
+		if (c == '\n')c = fgetc(fp);
+		X[i] = c;
+	}
+	for (int i = 1; i <= n; ++i) {
+		char c = fgetc(fp);
+		if (c == '\n')c = fgetc(fp);
+		Y[i] = c;
+	}
+	for (int i = 1; i <= m; ++i)printf("%c", X[i]);
+	printf("\n");
+	for (int i = 1; i <= n; ++i)printf("%c", Y[i]);
+	LCS(X, Y, m, n, fo);
+	return 0;
+}
