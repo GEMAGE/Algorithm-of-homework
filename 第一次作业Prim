@@ -1,0 +1,83 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define MAXSIZE 10
+#define TRUE 1
+#define FALSE 0
+typedef int WeightType;
+ 
+typedef struct {
+	int Nv;
+	int Ne;
+	WeightType G[MAXSIZE][MAXSIZE];
+}GNode, *MGraph;
+
+MGraph buildGraph(FILE* fp) {
+	int v1, v2, w;
+	MGraph graph = (MGraph)malloc(sizeof(GNode));
+	fscanf_s(fp, "%d %d", &graph->Nv, &graph->Ne);
+	memset(graph->G, 0, sizeof(graph->G));
+	for (int i = 0; i < graph->Ne; ++i) {
+		fscanf_s(fp, "%d %d %d", &v1, &v2, &w);
+		graph->G[v1][v2] = w;
+		graph->G[v2][v1] = w;
+	}
+	return graph;
+}
+
+int prim(MGraph graph) {
+	//在prim函数里，start用来表示开始顶点和新添加selected的顶点
+	int start = 0;
+	int ans = 0;
+	int selected[MAXSIZE];
+	int minDist[MAXSIZE];
+	int parent[MAXSIZE];
+	memset(selected, FALSE, sizeof(selected));
+	memset(minDist, 100, sizeof(minDist));
+	memset(parent, -1, sizeof(parent));
+	selected[start] = TRUE;
+	while (1) {
+		//遍历以新加入selected的点为起点的边，更新minDist和parent
+		for (int i = 0; i < graph->Nv; ++i) {
+			//该点还未被选中、两点间存在边、该边小于另一点到该点的边
+			if (selected[i] == FALSE && graph->G[start][i] != 0 && graph->G[start][i] < minDist[i]) {
+				minDist[i] = graph->G[start][i];
+				parent[i] = start;
+			}
+		}
+		int minW = 100, minP = 0;
+		for (int i = 0; i < graph->Nv; ++i) {
+			if (minDist[i] < minW && selected[i] == FALSE) {
+				minW = minDist[i];
+				minP = i;
+			}
+		}
+		//将权重加入，更新selected和start
+		ans += minW;
+		selected[minP] = TRUE;
+		start = minP;
+		//判断是否还有未加入selected的点,0:无，1:有
+		int flag = 0;
+		for (int i = 0; i < graph->Nv; ++i) {
+			if (selected[i] == FALSE) {
+				flag = 1;
+				break;
+			}
+		}
+		if (!flag)break;
+	}
+	return ans;
+}
+
+int main(){
+	FILE* fp, * fo;
+	fp = fopen("input.txt", "r");
+	fo = fopen("output.txt", "w");
+	MGraph graph = buildGraph(fp);
+	//最小生成树的权
+	int start;
+	fscanf_s(fp, "%d", &start);
+	printf("%d\n", prim(graph));
+	return 0;
+}
