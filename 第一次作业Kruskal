@@ -1,0 +1,89 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define MAXSIZE 20
+#define TRUE 1
+#define FALSE 0
+
+typedef struct e{
+	int v1, v2;
+	int w;
+}e;
+typedef struct {
+	int Nv, Ne;
+	struct e E[MAXSIZE];
+}Graph, *MGraph;
+
+int unionFind[MAXSIZE];
+
+//初始化并查集
+void init(int n) {
+	for (int i = 0; i < n; ++i) {
+		unionFind[i] = i;
+	}
+	return;
+}
+
+//查询两个结点是否属于同一个根结点
+int find(int v1, int v2) {
+	return unionFind[v1] == unionFind[v2];
+}
+
+//合并两个集合
+void merge(MGraph graph, int e) {
+	if (unionFind[graph->E[e].v1] < unionFind[graph->E[e].v2])
+		unionFind[graph->E[e].v2] = unionFind[graph->E[e].v1];
+	else
+		unionFind[graph->E[e].v1] = unionFind[graph->E[e].v2];
+}
+
+MGraph buildGraph(FILE* fp) {
+	MGraph graph = (MGraph)malloc(sizeof(Graph));
+	fscanf_s(fp, "%d %d", &graph->Nv, &graph->Ne);
+	for (int i = 0; i < graph->Ne; ++i)
+		fscanf_s(fp, "%d %d %d", &graph->E[i].v1, &graph->E[i].v2, &graph->E[i].w);
+	return graph;
+}
+
+int kruskal(MGraph graph) {
+	int ans = 0;
+	init(graph->Nv);
+	int min, e;
+	int MSTNum = 0;
+	while (1) {
+		min = 100, e = 0;
+		//查找E中权重最小的边e
+		for (int i = 0; i < graph->Ne; ++i) {
+			if (min >= graph->E[i].w && graph->E[i].w != 0) {
+				min = graph->E[i].w;
+				e = i;
+			}
+		}
+		//将e从E中删除
+		graph->E[e].w = 0;
+		//如果e在MST中不构成回路，将e加入MST
+		//根结点大的跟随根结点小的
+		if (!find(graph->E[e].v1, graph->E[e].v2)) {
+			ans += min;
+			MSTNum++;
+			//合并根结点（将该边的两个结点的根结点置为相同）
+			merge(graph, e);
+			//当出现合并两集合时要保证合并过去的那个集合的每个结点都有相同的根结点
+			for (int i = 0; i < graph->Ne; ++i) {
+				if (!graph->E[i].w) {
+					merge(graph, i);
+				}
+			}
+		}
+		if (MSTNum == graph->Nv - 1)break;
+	}
+	return ans;
+}
+
+int main() {
+	FILE* fp = fopen("input.txt", "r");
+	MGraph graph = buildGraph(fp);
+	printf("%d", kruskal(graph));
+	return 0;
+}
