@@ -1,0 +1,62 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<malloc.h>
+#define MAX_M 10
+#define MAX_N 10
+
+void investmentPlan(int m, int n, int f[][MAX_N], FILE* fo) {
+	//动态分配创建二维数组
+	int** F = (int**)malloc(sizeof(int*) * (n + 1));
+	for (int i = 0; i < m + 1; ++i)F[i] = (int*)malloc(sizeof(int) * (m + 1));
+	int** X = (int**)malloc(sizeof(int*) * (n + 1));
+	for (int i = 0; i < m + 1; ++i)X[i] = (int*)malloc(sizeof(int) * (m + 1));
+	int project[MAX_N] = { 0 };
+	int allMoney = m;
+
+	for (int i = 0; i < n + 1; ++i) { 
+		F[i][0] = 0; //投资0万元时收益0万元
+		X[i][0] = 0;
+	}
+	for (int i = 0; i < m + 1; ++i) { 
+		F[0][i] = 0; //投资0个项目时收益0元
+		X[0][i] = 0;
+	}
+
+	for (int k = 1; k < n + 1; ++k) {
+		for (int x = 1; x < m + 1; ++x) {
+			F[k][x] = 0;
+			X[k][x] = 0;
+			for (int xk = 0; xk <= x; ++xk) {
+				if (F[k][x] < f[k][xk] + F[k - 1][x - xk]) {
+					F[k][x] = f[k][xk] + F[k - 1][x - xk];
+					X[k][x] = xk;
+				}
+			}
+		}
+	}
+	fprintf(fo, "最高收益为：%d万元\n", F[n][m]);
+	fprintf(fo, "投资方案如下\n");
+	for (int i = n; i >= 0; --i) {
+		project[i] = X[i][allMoney];
+		allMoney -= X[i][allMoney];
+	}
+	for (int i = 1; i <= n; ++i) {
+		fprintf(fo, "第%d个项目：%d万元\n", i, project[i]);
+	}
+	return;
+}
+int main() {
+	FILE* fp, * fo;
+	int m, n; //m万元钱，n项投资
+	int f[MAX_M][MAX_N] = { 0 }; //收益
+	fp = fopen("input.txt", "r");
+	fo = fopen("output.txt", "w");
+	fscanf_s(fp, "%d %d", &m, &n);
+	for (int i = 1; i < n + 1; ++i) { 
+		for (int j = 1; j < m + 1; ++j) {
+			fscanf_s(fp, "%d", &f[i][j]);
+		}
+	}
+	investmentPlan(m, n, f, fo);
+	return 0;
+}
