@@ -1,0 +1,85 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include <stdlib.h>
+#include<time.h>
+#define MAXSIZE 200
+#define PRE_GROUP_LENGTH 5
+void BubbleSort(int array[], int start, int end) {
+	int flag = 1;
+	int len = end - start;
+	for (int i = 0; i < len; ++i) {
+		flag = 1;
+		for (int j = start; j < end - i - 1; ++j) {
+			if (array[j] > array[j + 1]) {
+				int temp = array[j];
+				array[j] = array[j + 1];
+				array[j + 1] = temp;
+				flag = 0;
+			}
+		}
+		if (flag)break;
+	}
+}
+void dc(int array[], int k, int length) {
+
+	if (length <= PRE_GROUP_LENGTH) {
+		BubbleSort(array, 0, length);
+		printf("%d", array[k - 1]);
+		return;
+	}
+
+	//记录最后面多出来的那些数
+	int i;
+	int middle;
+	int s1[MAXSIZE] = { 0 };
+	int s2[MAXSIZE] = { 0 };
+	int mid[MAXSIZE / PRE_GROUP_LENGTH] = { 0 };
+	int left = 0, right = 0;
+
+	//每5个一组，对每组按升序排序
+	for (i = 0; i < length - PRE_GROUP_LENGTH; i += PRE_GROUP_LENGTH) {
+		BubbleSort(array, i, i + PRE_GROUP_LENGTH);
+	}
+
+	for (int j = 0; j < length / PRE_GROUP_LENGTH; ++j) {
+		mid[j] = array[2 + j * PRE_GROUP_LENGTH];
+	}
+	BubbleSort(mid, 0, length / PRE_GROUP_LENGTH);
+	middle = mid[length / PRE_GROUP_LENGTH / 2];
+
+	for (int j = 0; j < length; ++j) {
+		if (array[j] < middle)s1[left++] = array[j];
+		if (array[j] > middle)s2[right++] = array[j];
+	}
+
+	if (k == left + 1) {
+		printf("%d\n", middle);
+	}
+	else if (k <= left) {
+		for (int j = 0; j < left; ++j)
+			array[j] = s1[j];
+		dc(array, k, left);
+	}
+	else {
+		for (int j = 0; j < right; ++j)
+			array[j] = s2[j];
+		k = k - left - 1;
+		dc(array, k, right);
+	}
+}
+int main() {
+	srand(time(NULL));
+	FILE* fp;
+	fp = fopen("input.txt", "w");
+	int array[MAXSIZE];
+	int n;
+	scanf_s("%d", &n);
+	for (int i = 0; i < n; ++i) {
+		array[i] = rand()%1000;
+		fprintf_s(fp, "%d ", array[i]);
+	}
+	int k;
+	scanf_s("%d", &k);
+	dc(array, k, n);
+	return 0;
+}
