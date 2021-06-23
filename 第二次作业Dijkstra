@@ -1,0 +1,76 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#define MAXSIZE 10
+#define TRUE 1
+#define FALSE 0
+#define INF 100
+typedef int WeightType;
+
+typedef struct {
+	int Nv;
+	int Ne;
+	WeightType G[MAXSIZE][MAXSIZE];
+}GNode, * MGraph;
+
+MGraph buildGraph(FILE* fp) {
+	int v1, v2, w;
+	MGraph graph = (MGraph)malloc(sizeof(GNode));
+	fscanf_s(fp, "%d %d", &graph->Nv, &graph->Ne);
+	memset(graph->G, 0, sizeof(graph->G));
+	for (int i = 0; i < graph->Ne; ++i) {
+		fscanf_s(fp, "%d %d %d", &v1, &v2, &w);
+		graph->G[v1][v2] = w;
+	}
+	return graph;
+}
+
+int selected[MAXSIZE];
+int distance[MAXSIZE];
+int parent[MAXSIZE];
+
+void Dijkstra(MGraph graph, int start) {
+	//初始化三个数组
+	memset(selected, FALSE, sizeof(selected));
+	memset(distance, INF, sizeof(distance));
+	memset(parent, -1, sizeof(parent));
+	selected[start] = TRUE;
+	distance[start] = 0;
+	int countTrue = 1;
+	while (1) {
+		//update
+		for (int i = 1; i <= graph->Nv; ++i) {
+			if (graph->G[start][i] != 0 && !selected[i] && distance[i] > graph->G[start][i] + distance[start]) {
+				distance[i] = distance[start] + graph->G[start][i];
+				parent[i] = start;
+			}
+		}
+		//scan
+		int min = INF, minP = 0;
+		for (int i = 1; i <= graph->Nv; ++i) {
+			if (min >= distance[i] && !selected[i]) {
+				min = distance[i];
+				minP = i;
+			}
+		}
+		//add
+		selected[minP] = TRUE;
+		start = minP;
+		countTrue++;
+		if (countTrue == graph->Nv)break;
+	}
+}
+
+int main() {
+	FILE* fp, * fo;
+	fp = fopen("input.txt", "r");
+	MGraph graph = buildGraph(fp);
+	//char start, end;
+	//printf("输入起点和终点：");
+	//scanf_s("%c %c", &start, &end);
+	//printf("%d", start - 'a' + 1);
+	Dijkstra(graph, 1);
+	printf("%d", distance[8]);
+	return 0;
+}
