@@ -1,0 +1,95 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#define MAX_N 10
+#define MAX 100000
+void setSeparate(int separate[], int s[][MAX_N], int i, int j, int n, int flag) {
+	if (i + 1 >= j || s[i][j] == 0)return;
+	if (flag == 1 && s[i][j] + 1 != n && s[i][j] - 1 != 0)separate[s[i][j]] += 2;
+	else separate[s[i][j]]++;
+	if (s[i][j] + 1 < n && separate[s[i][j] + 1] == 0) {
+		for (int ii = s[i][j] + 1; ii <= n; ++ii) {
+			if (separate[ii] != 0 || ii == n) {
+				separate[ii]++;
+				break;
+			}
+		}
+	}
+	if (s[i][j] - 1 > 0 && separate[s[i][j] - 1] == 0) {
+		for (int ii = s[i][j] - 1; ii >= 0; --ii) {
+			if (separate[ii] != 0 || ii == 0) {
+				separate[ii]++;
+				break;
+			}
+		}
+	}
+	setSeparate(separate, s, i, s[i][j], n, 0);
+	setSeparate(separate, s, s[i][j] + 1, j, n, 0);
+}
+void print(int separate[], int n, FILE* fo) {
+	int count = 0;
+	int flag = 0;//记录是左括号还是右括号，0左括号，1右括号
+	int i = 0;//记录括号打到哪个位置
+	fprintf(fo, "运算方案：");
+	while (1) {
+		if (flag == 0 && separate[i] != 0) {
+			count++;
+			separate[i]--;
+			fprintf(fo, "(");
+		}
+		if (flag == 1 && separate[i] != 0) {
+			count--;
+			separate[i]--;
+			fprintf(fo, ")");
+		}
+		if (separate[i] == 0 && i < n) {
+			fprintf(fo, "A%d", i+1);
+		}
+		if ((separate[i] == 0 && separate[i + 1] == 0) || count == 0) {
+			flag = flag == 1 ? 0 : 1;
+		}
+		if (separate[i] == 0)i++;
+		if (i == n + 1)break;
+	}
+	fprintf(fo, "\n\n");
+}
+void MatrixChain(int n, int p[], FILE* fo) {
+	int m[MAX_N][MAX_N] = { 0 };
+	int s[MAX_N][MAX_N] = { 0 };
+
+	for (int r = 2; r <= n; ++r) {
+		for (int i = 1; i <= n - (r - 1); ++i) {
+			m[i][i + r - 1] = MAX;
+			if (i + 1 != i + r - 1) s[i][i + r - 1] = MAX_N;
+			for (int k = i; k < i + r - 1; ++k) {
+				int newM = m[i][k] + m[k + 1][i + r - 1] + p[i - 1] * p[k] * p[i + r - 1];
+				if (m[i][i + r - 1] > newM) {
+					m[i][i + r - 1] = newM;
+					if(i + 1 != i + r - 1) s[i][i + r - 1] = k;
+				}
+			}
+		}
+	}
+
+	fprintf(fo, "基本运算的总次数：%d\n", m[1][n]);
+	int separate[MAX_N] = { 0 };
+	setSeparate(separate, s, 1, n, n, 1);
+	print(separate, n, fo);
+	return;
+}
+
+int main() {
+	FILE* fp, * fo;
+	fp = fopen("input.txt", "r");
+	fo = fopen("output.txt", "w");
+	int totalCase;
+	fscanf_s(fp, "%d", &totalCase);
+	for (int i = 1; i <= totalCase; ++i) {
+		int n;
+		int p[MAX_N] = { 0 };
+		fscanf_s(fp, "%d", &n);
+		for (int i = 0; i <= n; ++i)fscanf_s(fp, "%d", &p[i]);
+		fprintf(fo, "case %d\n", i);
+		MatrixChain(n, p, fo);
+	}
+	return 0;
+}
