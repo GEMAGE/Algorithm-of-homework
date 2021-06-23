@@ -1,0 +1,84 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include<stdio.h>
+#include<math.h>
+#define MAXSIZE 20
+#define INF 100
+
+typedef struct{
+	double x;
+	double y;
+}Point;
+
+double FindMiddlePair(Point point[], double d, int left, int right) {
+	int mid = (left + right) / 2;
+	double median = point[mid].x;
+	for (int i = left; i < mid; ++i) {
+		for (int j = mid; j <= right; ++j) {
+			if (point[i].x - median <= d && median - point[j].x <= d) {
+				double dnew = pow(point[i].x - point[j].x, 2) + pow(point[i].y - point[j].y, 2);
+				if (dnew < d)d = dnew;
+			}
+		}
+	}
+	return d;
+}
+
+double ClosestPair(Point point[], int left, int right) {
+	if (left + 1 == right)
+		return pow(point[left].x - point[right].x, 2) + pow(point[left].y - point[right].y, 2);
+	if (left == right) return pow(INF, 2);
+	int mid = (left + right) / 2;
+	double dl, dr;
+	dl = ClosestPair(point, left, mid);
+	dr = ClosestPair(point, mid + 1, right);
+	double d = dl < dr ? dl : dr;
+	d = FindMiddlePair(point, d, left, right);
+	return d;
+}
+
+void Merge(Point array[], int left, int mid, int right) {
+	if (left >= right)return;
+	Point newArray[MAXSIZE] = { {0,0} };
+	int frontLeft = left;
+	int frontRight = mid;
+	int backLeft = mid + 1;
+	int backRight = right;
+	int start = left;
+	while (frontLeft <= frontRight && backLeft <= backRight) {
+		if (array[frontLeft].x < array[backLeft].x) {
+			newArray[start] = array[frontLeft++];
+		}
+		else {
+			newArray[start] = array[backLeft++];
+		}
+		start++;
+	}
+	while (frontLeft <= frontRight) {
+		newArray[start++] = array[frontLeft++];
+	}
+	while (backLeft <= backRight) {
+		newArray[start++] = array[backLeft++];
+	}
+	for (int i = left; i <= right; ++i)array[i] = newArray[i];
+}
+
+void MergeSort(Point array[], int left, int right) {
+	if (left >= right)return;
+	int mid = (left + right) / 2;
+	MergeSort(array, left, mid);
+	MergeSort(array, mid + 1, right);
+	Merge(array, left, mid, right);
+	return;
+}
+
+int main() {
+	Point point[20];
+	int n;
+	scanf_s("%d", &n);
+	for (int i = 0; i < n; ++i)
+		scanf_s("%lf %lf", &point[i].x, &point[i].y);
+	MergeSort(point, 0, n - 1);
+	double d = ClosestPair(point, 0, n - 1);
+	printf("%f\n", sqrt(d));
+	return 0;
+}
